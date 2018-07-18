@@ -1870,7 +1870,7 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
     uint8_t signatureLength;
     cx_ecfp_private_key_t privateKey;
     uint32_t tx = 0;
-    uint8_t rLength, sLength, rOffset, sOffset;
+    uint8_t rLength, sLength, rOffset, sOffset, vOffset;
     os_perso_derive_node_bip32(
         CX_CURVE_256K1, tmpCtx.transactionContext.bip32Path,
         tmpCtx.transactionContext.pathLength, privateKeyData, NULL);
@@ -1898,22 +1898,39 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
         G_io_apdu_buffer[0] = 27 + (signature[0] & 0x01);
     } else {
         // New API
-        uint8_t v;
+        uint32_t v;
         if (tmpContent.txContent.vLength == 1) {
             v = tmpContent.txContent.v[0];
-        } else {
+        } else if (tmpContent.txContent.vLength == 2) {
             v = tmpContent.txContent.v[1];
+        } else if (tmpContent.txContent.vLength == 3) {
+            v = (tmpContent.txContent.v[1] << 8) | tmpContent.txContent.v[2];
+        } else if (tmpContent.txContent.vLength == 4) {
+            v = (tmpContent.txContent.v[1] << 16) | (tmpContent.txContent.v[2] << 8) | tmpContent.txContent.v[3];
+        } else {
+            v = (tmpContent.txContent.v[1] << 24) | (tmpContent.txContent.v[2] << 16) | (tmpContent.txContent.v[3] << 8) | tmpContent.txContent.v[4];
         }
-        G_io_apdu_buffer[0] = (v * 2) + 35 + (signature[0] & 0x01);
+        v = (v * 2) + 35 + (signature[0] & 0x01);
+        uint8_t data[4];
+        data[0] = (v >> 24) & 0xff;
+        data[1] = (v >> 16) & 0xff;
+        data[2] = (v >> 8) & 0xff;
+        data[3] = (v) & 0xff;
+        uint8_t offset = 0;
+        while (!data[offset]) {
+            offset++;
+        }
+        os_memmove(G_io_apdu_buffer, data + offset, 4 - offset);
+        vOffset = 4 - offset;
     }
     rLength = signature[3];
     sLength = signature[4 + rLength + 1];
     rOffset = (rLength == 33 ? 1 : 0);
     sOffset = (sLength == 33 ? 1 : 0);
-    os_memmove(G_io_apdu_buffer + 1, signature + 4 + rOffset, 32);
-    os_memmove(G_io_apdu_buffer + 1 + 32, signature + 4 + rLength + 2 + sOffset,
+    os_memmove(G_io_apdu_buffer + vOffset, signature + 4 + rOffset, 32);
+    os_memmove(G_io_apdu_buffer + vOffset + 32, signature + 4 + rLength + 2 + sOffset,
                32);
-    tx = 65;
+    tx = 64 + vOffset;
     G_io_apdu_buffer[tx++] = 0x90;
     G_io_apdu_buffer[tx++] = 0x00;
 #ifdef HAVE_U2F
