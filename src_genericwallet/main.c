@@ -1896,7 +1896,7 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
     if (tmpContent.txContent.vLength == 0) {
         // Legacy API
         G_io_apdu_buffer[0] = 27 + (signature[0] & 0x01);
-    } else {
+    } else if (tmpContent.txContent.vLength < 3) {
         // New API
         uint8_t v;
         if (tmpContent.txContent.vLength == 1) {
@@ -1905,6 +1905,9 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
             v = tmpContent.txContent.v[1];
         }
         G_io_apdu_buffer[0] = (v * 2) + 35 + (signature[0] & 0x01);
+    } else {
+        // return signature[0] bit only. v will be calculated at javascript level
+        G_io_apdu_buffer[0] = signature[0] & 0x01;
     }
     rLength = signature[3];
     sLength = signature[4 + rLength + 1];
