@@ -28,7 +28,7 @@ APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
 
 ifeq ($(CHAIN),ethereum)
 APP_LOAD_PARAMS += --path "44'/60'" --path "44'/61'"
-DEFINES += CHAINID_UPCASE=\"ETHEREUM\" CHAINID_COINNAME=\"ETH\" CHAINID_NAME=\"Ethereum\" CHAINID=$(CHAIN) CHAIN_TYPE_ETHEREUM
+DEFINES += CHAINID_UPCASE=\"ETHEREUM\" CHAINID_COINNAME=\"ETH\" CHAINID_NAME=\"Ethereum\" CHAINID=$(CHAIN) CHAIN_TYPE_ETHEREUM CX_COMPLIANCE_141
 APPNAME = Ethereum
 else ifeq ($(CHAIN),expanse)
 APP_LOAD_PARAMS += --path "44'/40'"
@@ -97,7 +97,7 @@ include $(BOLOS_SDK)/Makefile.glyphs
 
 ### computed variables
 APP_SOURCE_PATH  += src_genericwallet src_common src 
-SDK_SOURCE_PATH  += lib_stusb
+SDK_SOURCE_PATH  += lib_stusb src
 
 
 load: all
