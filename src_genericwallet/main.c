@@ -1911,17 +1911,23 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
             v = (tmpContent.txContent.v[1] << 24) | (tmpContent.txContent.v[2] << 16) | (tmpContent.txContent.v[3] << 8) | tmpContent.txContent.v[4];
         }
         v = (v * 2) + 35 + (signature[0] & 0x01);
-        uint8_t data[4];
-        data[0] = (v >> 24) & 0xff;
-        data[1] = (v >> 16) & 0xff;
-        data[2] = (v >> 8) & 0xff;
-        data[3] = (v) & 0xff;
-        uint8_t offset = 0;
-        while (!data[offset]) {
-            offset++;
+        if (v <= 127) {
+            os_memmove(G_io_apdu_buffer, v, 1);
+            vOffset = 1;
+        } else {
+            uint8_t data[4];
+            data[0] = (v >> 24) & 0xff;
+            data[1] = (v >> 16) & 0xff;
+            data[2] = (v >> 8) & 0xff;
+            data[3] = (v) & 0xff;
+            uint8_t offset = 0;
+            while (!data[offset]) {
+                offset++;
+            }
+            os_memmove(G_io_apdu_buffer, 0x80 + (4 - offset), 1);
+            os_memmove(G_io_apdu_buffer + 1, data + offset, 4 - offset);
+            vOffset = 5 - offset;
         }
-        os_memmove(G_io_apdu_buffer, data + offset, 4 - offset);
-        vOffset = 4 - offset;
     }
     rLength = signature[3];
     sLength = signature[4 + rLength + 1];
