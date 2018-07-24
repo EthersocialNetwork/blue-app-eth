@@ -38,6 +38,10 @@ else ifeq ($(CHAIN),ubiq)
 APP_LOAD_PARAMS += --path "44'/108'"
 DEFINES += CHAINID_UPCASE=\"UBIQ\" CHAINID_COINNAME=\"UBQ\" CHAINID_NAME=\"Ubiq\" CHAINID=$(CHAIN) CHAIN_TYPE_UBIQ
 APPNAME = Ubiq
+else ifeq ($(CHAIN),ethersocial)
+APP_LOAD_PARAMS += --path "44'/60'" --path "44'/31102'"
+DEFINES += CHAINID_UPCASE=\"ETHERSOCIAL\" CHAINID_COINNAME=\"ESN\" CHAINID_NAME=\"Ethersocial\" CHAINID=$(CHAIN) CHAIN_TYPE_ETHERSOCIAL
+APPNAME = Ethersocial
 else
 ifeq ($(filter clean,$(MAKECMDGOALS)),)
 $(error Unsupported CHAIN - use ethereum, expanse, ubiq)
